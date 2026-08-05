@@ -1,0 +1,4 @@
+# Apache/XAMPP: block all direct access to raw media files.
+# Movies/books/music must only be reachable through stream.php / book_stream.php
+# / image.php, which enforce login and hide the real file path.
+Require all denied

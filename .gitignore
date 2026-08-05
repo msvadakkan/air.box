@@ -1,0 +1,15 @@
+# Runtime "database" and seeded/uploaded media — generated at first run,
+# not source code. Keeps password hashes and uploaded files out of git.
+/data/*.json
+/data/.seeded
+/storage/movies/videos/*
+/storage/movies/thumbs/*
+/storage/books/pdfs/*
+/storage/books/covers/*
+/storage/music/audio/*
+/storage/music/covers/*
+!/storage/**/.htaccess
+
+# OS/editor cruft
+.DS_Store
+Thumbs.db

@@ -1,0 +1,4 @@
+# Apache/XAMPP: block all direct access to the JSON "database" files.
+# (User records include password hashes — these must only ever be read
+# through JsonDB from PHP, never served as static files.)
+Require all denied
