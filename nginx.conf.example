@@ -1,0 +1,43 @@
+# Example nginx server block for air.box.
+#
+# Unlike php -S (router.php) and Apache (data|storage/.htaccess), nginx
+# doesn't honor either of those mechanisms on its own — this block is what
+# actually keeps /data/*.json (password hashes) and everything under
+# /storage/ (raw movies/books/music) from being served as static files.
+# Without it, anyone could download them directly, bypassing image.php /
+# stream.php / book_stream.php entirely.
+#
+# There's no pretty-URL routing in this app (every page is requested by its
+# real filename, e.g. /watch.php?id=...), so no rewrite rules are needed
+# beyond the standard "serve static files, hand .php to PHP-FPM" pattern.
+
+server {
+    listen 80;
+    server_name air.box.local;                 # change to your domain, or use "_" for default
+    root /var/www/air.box;                      # change to this project's absolute path
+    index index.php;
+
+    # Block direct access to the JSON "database" and raw uploaded media.
+    location ~ ^/(data|storage)/ {
+        deny all;
+        return 403;
+    }
+
+    # Block dotfiles (.htaccess, .env, .git, etc.) just in case.
+    location ~ /\. {
+        deny all;
+    }
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+    location ~ \.php$ {
+        # Adjust to match your PHP-FPM pool (TCP or unix socket).
+        fastcgi_pass 127.0.0.1:9000;
+        # fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+        fastcgi_index index.php;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    }
+}

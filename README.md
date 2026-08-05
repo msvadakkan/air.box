@@ -10,11 +10,15 @@ A Netflix-style streaming app for movies, books, and music — built with plain 
 
 ## Requirements
 
-- PHP 8.0+ (no extensions beyond the defaults) — install via [XAMPP](https://www.apachefriends.org/) (includes Apache) or the plain [php.net](https://www.php.net/downloads) binary.
+- PHP 8.1+ (no extensions beyond the defaults). On Windows: [XAMPP](https://www.apachefriends.org/) or the plain [php.net](https://www.php.net/downloads) binary. On Linux: your distro's package (`apt install php php-fpm`, `dnf install php-fpm`, etc.) — Ubuntu 22.04+/Debian 12+/RHEL 9+ all ship 8.1 or newer by default.
 
 ## Running it
 
-**Option A — PHP's built-in server (fastest to try):**
+**Easiest — double-click `start.bat`:**
+
+Finds PHP (checks PATH, then the winget install folder), starts the server, and opens http://localhost:8000 in your browser automatically. Close the window (or Ctrl+C) to stop it.
+
+**Or from a terminal:**
 
 ```
 php -S localhost:8000 router.php
@@ -22,11 +26,35 @@ php -S localhost:8000 router.php
 
 Then open http://localhost:8000
 
-`router.php` matters here: the built-in server ignores `.htaccess`, so without it a direct request to `/data/users.json` or a file under `/storage` would be served as a raw static file — leaking password hashes and bypassing login. The router blocks both paths.
+`router.php` matters here: the built-in server ignores `.htaccess`, so without it a direct request to `/data/users.json` or a file under `/storage` would be served as a raw static file — leaking password hashes and bypassing login. The router blocks both paths. (`start.bat` already runs this command for you.)
 
-**Option B — XAMPP/Apache:**
+**Or XAMPP/Apache:**
 
 Copy this folder into `htdocs/`, start Apache, and visit it in the browser. The `.htaccess` files in `data/` and `storage/` already lock those folders down (`Require all denied`).
+
+**Or nginx + PHP-FPM (Linux):**
+
+nginx ignores `.htaccess` entirely, so those files provide no protection here — use [`nginx.conf.example`](nginx.conf.example) instead, which denies `/data/` and `/storage/` directly in the server block and routes `.php` to PHP-FPM.
+
+```bash
+# 1. Copy the project where nginx can serve it
+sudo cp -r air.box /var/www/air.box
+
+# 2. Let PHP-FPM's user own it, so the app can create data/ and storage/
+#    subfolders and write uploads on first run — this is the #1 thing
+#    people hit on a fresh Linux box (permission denied on first request).
+sudo chown -R www-data:www-data /var/www/air.box   # Debian/Ubuntu PHP-FPM user
+# RHEL/CentOS/Fedora typically use "nginx" instead of "www-data"
+
+# 3. Install the site config
+sudo cp /var/www/air.box/nginx.conf.example /etc/nginx/sites-available/air.box
+sudo ln -s /etc/nginx/sites-available/air.box /etc/nginx/sites-enabled/
+# — edit root and fastcgi_pass in that file to match your setup first —
+sudo nginx -t && sudo systemctl reload nginx
+sudo systemctl restart php8.1-fpm   # or whatever your php-fpm service is named
+```
+
+`router.php` and `start.bat` aren't used in this setup — they're for the PHP built-in dev server and Windows convenience respectively. nginx talks to PHP-FPM directly.
 
 ## First run
 
