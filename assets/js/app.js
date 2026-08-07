@@ -30,6 +30,69 @@
     });
   }
 
+  // ---- Admin upload forms: real progress bar via XHR ----
+  // A plain <form method=post> gives the browser no way to show upload
+  // progress, so this intercepts submit, sends the same multipart body via
+  // XHR (which exposes upload.onprogress), and once the response lands
+  // (whether that's the success redirect PHP sends or a validation-error
+  // page re-rendered at the same URL) swaps it in as if it were a normal
+  // navigation.
+  document.querySelectorAll('form.upload-form').forEach(function (form) {
+    var progress = form.querySelector('.upload-progress');
+    var bar = form.querySelector('.upload-progress-bar');
+    var text = form.querySelector('.upload-progress-text');
+    var submitBtn = form.querySelector('button[type=submit]');
+    if (!progress || !bar || !text) return;
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      progress.hidden = false;
+      progress.classList.remove('error');
+      bar.style.width = '0%';
+      text.textContent = 'Uploading… 0%';
+      if (submitBtn) submitBtn.disabled = true;
+
+      // Not form.action: these forms have <input name="action">, and per
+      // the HTML spec a form's named controls shadow same-named built-in
+      // properties — form.action resolves to that <input> element, not the
+      // submit URL. None of these forms set an explicit action attribute
+      // (they all post to their own page), so the document URL is correct.
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', window.location.href, true);
+
+      xhr.upload.addEventListener('progress', function (evt) {
+        if (!evt.lengthComputable) return;
+        var pct = Math.round((evt.loaded / evt.total) * 100);
+        bar.style.width = pct + '%';
+        text.textContent = pct < 100
+          ? 'Uploading… ' + pct + '%'
+          : 'Upload complete — processing…';
+      });
+
+      xhr.addEventListener('load', function () {
+        // Swap the whole document for the server's response, whatever it
+        // is (success banner after PHP's redirect, or the same page
+        // re-rendered with validation errors) — matches what a normal
+        // form submission would have shown.
+        document.open();
+        document.write(xhr.responseText);
+        document.close();
+        if (xhr.responseURL) {
+          window.history.replaceState(null, '', xhr.responseURL);
+        }
+      });
+
+      xhr.addEventListener('error', function () {
+        progress.classList.add('error');
+        text.textContent = 'Upload failed — check your connection and try again.';
+        if (submitBtn) submitBtn.disabled = false;
+      });
+
+      xhr.send(new FormData(form));
+    });
+  });
+
   // ---- Admin sidebar drawer ----
   var adminToggle = document.getElementById('adminSidebarToggle');
   var adminSidebar = document.getElementById('adminSidebar');

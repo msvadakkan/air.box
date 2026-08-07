@@ -589,6 +589,17 @@ a:focus-visible, input:focus-visible, textarea:focus-visible {
 .form-grid .field-full { grid-column: 1 / -1; }
 @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } .panel { padding: 20px; } }
 
+.upload-progress { margin: 18px 0; }
+.upload-progress-track { height: 8px; border-radius: 999px; background: var(--bg-elev-2); overflow: hidden; }
+.upload-progress-bar {
+  height: 100%; width: 0%; border-radius: 999px;
+  background: linear-gradient(135deg, var(--red), var(--red-dim));
+  transition: width .15s ease;
+}
+.upload-progress-text { display: block; margin-top: 6px; font-size: 13px; color: var(--text-dim); }
+.upload-progress.error .upload-progress-bar { background: #b3101f; }
+.upload-progress.error .upload-progress-text { color: var(--red); }
+
 .table-scroll { overflow-x: auto; }
 .data-table { width: 100%; border-collapse: collapse; font-size: 14px; }
 .data-table th, .data-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; }

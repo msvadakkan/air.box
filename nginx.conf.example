@@ -17,6 +17,12 @@ server {
     root /var/www/air.box;                      # change to this project's absolute path
     index index.php;
 
+    # nginx's own default is 1MB and it enforces this itself, before the
+    # request ever reaches PHP-FPM — raising PHP's upload_max_filesize/
+    # post_max_size alone is not enough. Keep in sync with php.ini
+    # (currently 1030M, admin movie uploads allow up to 1GB).
+    client_max_body_size 1030M;
+
     # Block direct access to the JSON "database" and raw uploaded media.
     location ~ ^/(data|storage)/ {
         deny all;

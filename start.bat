@@ -28,6 +28,6 @@ echo Press Ctrl+C to stop the server.
 echo.
 
 start "" http://localhost:8000
-"!PHP_EXE!" -S localhost:8000 router.php
+"!PHP_EXE!" -c "%~dp0php.ini" -S localhost:8000 router.php
 
 pause

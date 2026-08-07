@@ -15,7 +15,7 @@ define('MUSIC_COVER_DIR', STORAGE_DIR . '/music/covers');
 define('SITE_NAME', 'air.box');
 
 // Upload limits
-define('MAX_VIDEO_BYTES', 500 * 1024 * 1024); // 500MB
+define('MAX_VIDEO_BYTES', 1024 * 1024 * 1024); // 1GB
 define('MAX_AUDIO_BYTES', 50 * 1024 * 1024);  // 50MB
 define('MAX_PDF_BYTES', 50 * 1024 * 1024);    // 50MB
 define('MAX_IMAGE_BYTES', 8 * 1024 * 1024);   // 8MB

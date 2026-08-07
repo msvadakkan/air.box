@@ -21,16 +21,16 @@ Finds PHP (checks PATH, then the winget install folder), starts the server, and 
 **Or from a terminal:**
 
 ```
-php -S localhost:8000 router.php
+php -c php.ini -S localhost:8000 router.php
 ```
 
 Then open http://localhost:8000
 
-`router.php` matters here: the built-in server ignores `.htaccess`, so without it a direct request to `/data/users.json` or a file under `/storage` would be served as a raw static file — leaking password hashes and bypassing login. The router blocks both paths. (`start.bat` already runs this command for you.)
+`router.php` matters here: the built-in server ignores `.htaccess`, so without it a direct request to `/data/users.json` or a file under `/storage` would be served as a raw static file — leaking password hashes and bypassing login. The router blocks both paths. `-c php.ini` matters too — PHP's compiled-in default upload limit is 8MB (2MB for a single file), far below what the app allows (movies up to 1GB); without it, uploading anything beyond a few MB fails with a cryptic "headers already sent" error instead of your file. (`start.bat` already does both for you.)
 
 **Or XAMPP/Apache:**
 
-Copy this folder into `htdocs/`, start Apache, and visit it in the browser. The `.htaccess` files in `data/` and `storage/` already lock those folders down (`Require all denied`).
+Copy this folder into `htdocs/`, start Apache, and visit it in the browser. The `.htaccess` files in `data/` and `storage/` already lock those folders down (`Require all denied`). Also copy the settings from [`php.ini`](php.ini) (`upload_max_filesize`, `post_max_size`, etc.) into XAMPP's own `php.ini` (`xampp/php/php.ini`) and restart Apache — otherwise the same 8MB upload ceiling applies here too.
 
 **Or nginx + PHP-FPM (Linux):**
 
@@ -51,6 +51,16 @@ sudo cp /var/www/air.box/nginx.conf.example /etc/nginx/sites-available/air.box
 sudo ln -s /etc/nginx/sites-available/air.box /etc/nginx/sites-enabled/
 # — edit root and fastcgi_pass in that file to match your setup first —
 sudo nginx -t && sudo systemctl reload nginx
+
+# 4. Apply the upload/execution limits from php.ini (PHP-FPM's default 8MB
+#    upload ceiling is far below the app's 1GB movie limit) — either paste
+#    them into /etc/php/8.1/fpm/php.ini, or scope them to just this site
+#    via a PHP-FPM pool file. nginx also enforces its own upload ceiling
+#    independently of PHP (client_max_body_size, set in nginx.conf.example):
+echo 'php_admin_value[upload_max_filesize] = 1030M
+php_admin_value[post_max_size] = 1030M
+php_admin_value[memory_limit] = 256M
+php_admin_value[max_execution_time] = 600' | sudo tee -a /etc/php/8.1/fpm/pool.d/www.conf
 sudo systemctl restart php8.1-fpm   # or whatever your php-fpm service is named
 ```
 

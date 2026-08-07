@@ -55,7 +55,7 @@ require __DIR__ . '/includes/admin_header.php';
 <div class="panel" id="upload">
   <h2>Upload a track</h2>
   <?php foreach ($errors as $e): ?><div class="alert alert-error"><?= h($e) ?></div><?php endforeach; ?>
-  <form method="post" enctype="multipart/form-data">
+  <form method="post" enctype="multipart/form-data" class="upload-form">
     <input type="hidden" name="action" value="add">
     <div class="form-grid">
       <div class="field"><label>Title</label><input name="title" required value="<?= h($_POST['title'] ?? '') ?>"></div>
@@ -64,6 +64,10 @@ require __DIR__ . '/includes/admin_header.php';
       <div class="field"><label>Genre</label><input name="genre" value="<?= h($_POST['genre'] ?? '') ?>"></div>
       <div class="field"><label>Cover image</label><input type="file" name="cover" accept="image/*" required></div>
       <div class="field"><label>Audio file (mp3/wav/ogg, optional)</label><input type="file" name="audio" accept="audio/mpeg,audio/wav,audio/ogg"></div>
+    </div>
+    <div class="upload-progress" hidden>
+      <div class="upload-progress-track"><div class="upload-progress-bar"></div></div>
+      <span class="upload-progress-text">Uploading… 0%</span>
     </div>
     <button class="btn btn-accent" type="submit">Upload Track</button>
   </form>
