@@ -4,6 +4,13 @@ require_admin();
 
 $errors = [];
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_featured'])) {
+    $ok = (bool)movies_db()->update($_POST['toggle_featured'], ['featured' => !empty($_POST['value'])]);
+    header('Content-Type: application/json');
+    echo json_encode(['ok' => $ok]);
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add') {
     $title = trim($_POST['title'] ?? '');
     $genre = trim($_POST['genre'] ?? '');
@@ -33,15 +40,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add')
     }
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete') {
-    $id = $_POST['id'] ?? '';
-    $movie = movies_db()->find($id);
-    if ($movie) {
-        if ($movie['thumbnail']) @unlink(MOVIE_THUMB_DIR . '/' . basename($movie['thumbnail']));
-        if ($movie['video']) @unlink(MOVIE_VIDEO_DIR . '/' . basename($movie['video']));
-        movies_db()->delete($id);
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
+    $deleted = delete_movie($_POST['delete_id']);
+    redirect(base_url('admin/movies.php?deleted=' . $deleted));
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_delete'])) {
+    $count = 0;
+    foreach ((array)($_POST['ids'] ?? []) as $id) {
+        $count += delete_movie($id);
     }
-    redirect(base_url('admin/movies.php?deleted=1'));
+    redirect(base_url('admin/movies.php?deleted=' . $count));
+}
+
+function delete_movie(string $id): int
+{
+    $movie = movies_db()->find($id);
+    if (!$movie) return 0;
+    if ($movie['thumbnail']) @unlink(MOVIE_THUMB_DIR . '/' . basename($movie['thumbnail']));
+    if ($movie['video']) @unlink(MOVIE_VIDEO_DIR . '/' . basename($movie['video']));
+    movies_db()->delete($id);
+    return 1;
 }
 
 $movies = movies_db()->all();
@@ -53,7 +72,9 @@ require __DIR__ . '/includes/admin_header.php';
 ?>
 
 <?php if (isset($_GET['added'])): ?><div class="alert alert-success">Movie uploaded.</div><?php endif; ?>
-<?php if (isset($_GET['deleted'])): ?><div class="alert alert-success">Movie deleted.</div><?php endif; ?>
+<?php if (isset($_GET['deleted'])): $n = (int)$_GET['deleted']; ?>
+  <div class="alert alert-success"><?= $n === 1 ? 'Movie deleted.' : "$n movies deleted." ?></div>
+<?php endif; ?>
 
 <div class="panel" id="upload">
   <h2>Upload a movie</h2>
@@ -80,29 +101,36 @@ require __DIR__ . '/includes/admin_header.php';
 
 <div class="panel">
   <h2>All movies (<?= count($movies) ?>)</h2>
-  <div class="table-scroll">
-  <table class="data-table">
-    <thead><tr><th>Thumb</th><th>Title</th><th>Genre</th><th>Year</th><th>Video</th><th></th></tr></thead>
-    <tbody>
-    <?php foreach ($movies as $m): ?>
-      <tr>
-        <td><img src="<?= h(image_url('movie', $m['id'])) ?>" alt=""></td>
-        <td><?= h($m['title']) ?><?php if (!empty($m['featured'])): ?> <span class="badge">Featured</span><?php endif; ?></td>
-        <td><?= h($m['genre']) ?></td>
-        <td><?= h($m['year']) ?></td>
-        <td><?php if ($m['video']): ?><span class="file-status-yes">Uploaded</span><?php else: ?><span class="file-status-no">Missing</span><?php endif; ?></td>
-        <td>
-          <form method="post" onsubmit="return confirm('Delete this movie?');" style="display:inline;">
-            <input type="hidden" name="action" value="delete">
-            <input type="hidden" name="id" value="<?= h($m['id']) ?>">
-            <button class="btn btn-danger btn-sm" type="submit">Delete</button>
-          </form>
-        </td>
-      </tr>
-    <?php endforeach; ?>
-    </tbody>
-  </table>
-  </div>
+  <form method="post" class="bulk-form">
+    <div class="table-toolbar">
+      <button type="submit" name="bulk_delete" value="1" class="btn btn-danger btn-sm bulk-delete-btn" disabled
+              onclick="return confirm('Delete the selected movies? This cannot be undone.');">
+        Delete Selected (<span class="bulk-count">0</span>)
+      </button>
+    </div>
+    <div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th><input type="checkbox" class="select-all" <?= $movies ? '' : 'disabled' ?>></th><th>Thumb</th><th>Title</th><th>Genre</th><th>Year</th><th>Video</th><th>Featured</th><th></th></tr></thead>
+      <tbody>
+      <?php foreach ($movies as $m): ?>
+        <tr>
+          <td><input type="checkbox" name="ids[]" value="<?= h($m['id']) ?>" class="row-check"></td>
+          <td><img src="<?= h(image_url('movie', $m['id'])) ?>" alt=""></td>
+          <td><?= h($m['title']) ?></td>
+          <td><?= h($m['genre']) ?></td>
+          <td><?= h($m['year']) ?></td>
+          <td><?php if ($m['video']): ?><span class="file-status-yes">Uploaded</span><?php else: ?><span class="file-status-no">Missing</span><?php endif; ?></td>
+          <td><input type="checkbox" class="featured-toggle" data-id="<?= h($m['id']) ?>" <?= !empty($m['featured']) ? 'checked' : '' ?>></td>
+          <td>
+            <button type="submit" name="delete_id" value="<?= h($m['id']) ?>" class="btn btn-danger btn-sm"
+                    onclick="return confirm('Delete this movie?');">Delete</button>
+          </td>
+        </tr>
+      <?php endforeach; ?>
+      </tbody>
+    </table>
+    </div>
+  </form>
 </div>
 
 <?php require __DIR__ . '/includes/admin_footer.php'; ?>

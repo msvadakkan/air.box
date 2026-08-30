@@ -2,8 +2,7 @@
   <footer class="site-footer">
     <div class="footer-row">
       <div class="footer-left">
-        <div>&copy; <?= date('Y') ?> <?= h(SITE_NAME) ?>. Developed for Rotana Jet customer entertainment.</div>
-        <div class="footer-powered">Powered by <a href="https://rotanajet.com/" target="_blank" rel="noopener">Rotana Jet</a></div>
+        <div>&copy; <?= date('Y') ?> <?= h(SITE_NAME) ?>. App developed by msv.</div>
       </div>
       <div class="footer-admin">
         <?php if ($__footerUser && ($__footerUser['role'] ?? '') === 'admin'): ?>

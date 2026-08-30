@@ -548,9 +548,6 @@ a:focus-visible, input:focus-visible, textarea:focus-visible {
 .site-footer { padding: 30px clamp(16px, 4vw, 56px) 40px; color: var(--text-faint); font-size: 13px; border-top: 1px solid var(--border); margin-top: 60px; }
 .footer-row { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
 .footer-left { display: flex; flex-direction: column; gap: 6px; }
-.footer-powered { font-size: 12px; }
-.footer-powered a { color: var(--red); font-weight: 600; }
-.footer-powered a:hover { color: var(--red-dim); }
 .footer-admin { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .footer-admin a { color: var(--text-faint); transition: color .15s; }
 .footer-admin a:hover { color: var(--text); }
@@ -600,12 +597,17 @@ a:focus-visible, input:focus-visible, textarea:focus-visible {
 .upload-progress.error .upload-progress-bar { background: #b3101f; }
 .upload-progress.error .upload-progress-text { color: var(--red); }
 
+.table-toolbar { display: flex; align-items: center; margin-bottom: 14px; min-height: 32px; }
+.bulk-delete-btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+
 .table-scroll { overflow-x: auto; }
 .data-table { width: 100%; border-collapse: collapse; font-size: 14px; }
 .data-table th, .data-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; }
 .data-table th { color: var(--text-dim); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+.data-table th:first-child, .data-table td:first-child { width: 1%; }
 .data-table img { width: 40px; height: 56px; object-fit: cover; border-radius: 4px; }
 .data-table tr:hover td { background: var(--row-hover); }
+.data-table input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--red); cursor: pointer; }
 .badge { padding: 2px 8px; border-radius: 4px; font-size: 11px; background: var(--bg-elev-2); color: var(--text-dim); }
 .file-status-yes { color: #1e9e56; }
 .file-status-no { color: #c4172c; }

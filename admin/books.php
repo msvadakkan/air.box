@@ -30,15 +30,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add')
     }
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete') {
-    $id = $_POST['id'] ?? '';
-    $book = books_db()->find($id);
-    if ($book) {
-        if ($book['cover']) @unlink(BOOK_COVER_DIR . '/' . basename($book['cover']));
-        if ($book['pdf']) @unlink(BOOK_PDF_DIR . '/' . basename($book['pdf']));
-        books_db()->delete($id);
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
+    $deleted = delete_book($_POST['delete_id']);
+    redirect(base_url('admin/books.php?deleted=' . $deleted));
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_delete'])) {
+    $count = 0;
+    foreach ((array)($_POST['ids'] ?? []) as $id) {
+        $count += delete_book($id);
     }
-    redirect(base_url('admin/books.php?deleted=1'));
+    redirect(base_url('admin/books.php?deleted=' . $count));
+}
+
+function delete_book(string $id): int
+{
+    $book = books_db()->find($id);
+    if (!$book) return 0;
+    if ($book['cover']) @unlink(BOOK_COVER_DIR . '/' . basename($book['cover']));
+    if ($book['pdf']) @unlink(BOOK_PDF_DIR . '/' . basename($book['pdf']));
+    books_db()->delete($id);
+    return 1;
 }
 
 $books = books_db()->all();
@@ -50,7 +62,9 @@ require __DIR__ . '/includes/admin_header.php';
 ?>
 
 <?php if (isset($_GET['added'])): ?><div class="alert alert-success">Book uploaded.</div><?php endif; ?>
-<?php if (isset($_GET['deleted'])): ?><div class="alert alert-success">Book deleted.</div><?php endif; ?>
+<?php if (isset($_GET['deleted'])): $n = (int)$_GET['deleted']; ?>
+  <div class="alert alert-success"><?= $n === 1 ? 'Book deleted.' : "$n books deleted." ?></div>
+<?php endif; ?>
 
 <div class="panel" id="upload">
   <h2>Upload a book</h2>
@@ -75,29 +89,35 @@ require __DIR__ . '/includes/admin_header.php';
 
 <div class="panel">
   <h2>All books (<?= count($books) ?>)</h2>
-  <div class="table-scroll">
-  <table class="data-table">
-    <thead><tr><th>Cover</th><th>Title</th><th>Author</th><th>Genre</th><th>PDF</th><th></th></tr></thead>
-    <tbody>
-    <?php foreach ($books as $b): ?>
-      <tr>
-        <td><img src="<?= h(image_url('book', $b['id'])) ?>" alt=""></td>
-        <td><?= h($b['title']) ?></td>
-        <td><?= h($b['author']) ?></td>
-        <td><?= h($b['genre']) ?></td>
-        <td><?php if ($b['pdf']): ?><span class="file-status-yes">Uploaded</span><?php else: ?><span class="file-status-no">Missing</span><?php endif; ?></td>
-        <td>
-          <form method="post" onsubmit="return confirm('Delete this book?');" style="display:inline;">
-            <input type="hidden" name="action" value="delete">
-            <input type="hidden" name="id" value="<?= h($b['id']) ?>">
-            <button class="btn btn-danger btn-sm" type="submit">Delete</button>
-          </form>
-        </td>
-      </tr>
-    <?php endforeach; ?>
-    </tbody>
-  </table>
-  </div>
+  <form method="post" class="bulk-form">
+    <div class="table-toolbar">
+      <button type="submit" name="bulk_delete" value="1" class="btn btn-danger btn-sm bulk-delete-btn" disabled
+              onclick="return confirm('Delete the selected books? This cannot be undone.');">
+        Delete Selected (<span class="bulk-count">0</span>)
+      </button>
+    </div>
+    <div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th><input type="checkbox" class="select-all" <?= $books ? '' : 'disabled' ?>></th><th>Cover</th><th>Title</th><th>Author</th><th>Genre</th><th>PDF</th><th></th></tr></thead>
+      <tbody>
+      <?php foreach ($books as $b): ?>
+        <tr>
+          <td><input type="checkbox" name="ids[]" value="<?= h($b['id']) ?>" class="row-check"></td>
+          <td><img src="<?= h(image_url('book', $b['id'])) ?>" alt=""></td>
+          <td><?= h($b['title']) ?></td>
+          <td><?= h($b['author']) ?></td>
+          <td><?= h($b['genre']) ?></td>
+          <td><?php if ($b['pdf']): ?><span class="file-status-yes">Uploaded</span><?php else: ?><span class="file-status-no">Missing</span><?php endif; ?></td>
+          <td>
+            <button type="submit" name="delete_id" value="<?= h($b['id']) ?>" class="btn btn-danger btn-sm"
+                    onclick="return confirm('Delete this book?');">Delete</button>
+          </td>
+        </tr>
+      <?php endforeach; ?>
+      </tbody>
+    </table>
+    </div>
+  </form>
 </div>
 
 <?php require __DIR__ . '/includes/admin_footer.php'; ?>

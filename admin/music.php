@@ -30,15 +30,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add')
     }
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete') {
-    $id = $_POST['id'] ?? '';
-    $track = music_db()->find($id);
-    if ($track) {
-        if ($track['cover']) @unlink(MUSIC_COVER_DIR . '/' . basename($track['cover']));
-        if ($track['audio']) @unlink(MUSIC_AUDIO_DIR . '/' . basename($track['audio']));
-        music_db()->delete($id);
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
+    $deleted = delete_track($_POST['delete_id']);
+    redirect(base_url('admin/music.php?deleted=' . $deleted));
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_delete'])) {
+    $count = 0;
+    foreach ((array)($_POST['ids'] ?? []) as $id) {
+        $count += delete_track($id);
     }
-    redirect(base_url('admin/music.php?deleted=1'));
+    redirect(base_url('admin/music.php?deleted=' . $count));
+}
+
+function delete_track(string $id): int
+{
+    $track = music_db()->find($id);
+    if (!$track) return 0;
+    if ($track['cover']) @unlink(MUSIC_COVER_DIR . '/' . basename($track['cover']));
+    if ($track['audio']) @unlink(MUSIC_AUDIO_DIR . '/' . basename($track['audio']));
+    music_db()->delete($id);
+    return 1;
 }
 
 $music = music_db()->all();
@@ -50,7 +62,9 @@ require __DIR__ . '/includes/admin_header.php';
 ?>
 
 <?php if (isset($_GET['added'])): ?><div class="alert alert-success">Track uploaded.</div><?php endif; ?>
-<?php if (isset($_GET['deleted'])): ?><div class="alert alert-success">Track deleted.</div><?php endif; ?>
+<?php if (isset($_GET['deleted'])): $n = (int)$_GET['deleted']; ?>
+  <div class="alert alert-success"><?= $n === 1 ? 'Track deleted.' : "$n tracks deleted." ?></div>
+<?php endif; ?>
 
 <div class="panel" id="upload">
   <h2>Upload a track</h2>
@@ -75,29 +89,35 @@ require __DIR__ . '/includes/admin_header.php';
 
 <div class="panel">
   <h2>All tracks (<?= count($music) ?>)</h2>
-  <div class="table-scroll">
-  <table class="data-table">
-    <thead><tr><th>Cover</th><th>Title</th><th>Artist</th><th>Album</th><th>Audio</th><th></th></tr></thead>
-    <tbody>
-    <?php foreach ($music as $t): ?>
-      <tr>
-        <td><img src="<?= h(image_url('music', $t['id'])) ?>" alt=""></td>
-        <td><?= h($t['title']) ?></td>
-        <td><?= h($t['artist']) ?></td>
-        <td><?= h($t['album']) ?></td>
-        <td><?php if ($t['audio']): ?><span class="file-status-yes">Uploaded</span><?php else: ?><span class="file-status-no">Missing</span><?php endif; ?></td>
-        <td>
-          <form method="post" onsubmit="return confirm('Delete this track?');" style="display:inline;">
-            <input type="hidden" name="action" value="delete">
-            <input type="hidden" name="id" value="<?= h($t['id']) ?>">
-            <button class="btn btn-danger btn-sm" type="submit">Delete</button>
-          </form>
-        </td>
-      </tr>
-    <?php endforeach; ?>
-    </tbody>
-  </table>
-  </div>
+  <form method="post" class="bulk-form">
+    <div class="table-toolbar">
+      <button type="submit" name="bulk_delete" value="1" class="btn btn-danger btn-sm bulk-delete-btn" disabled
+              onclick="return confirm('Delete the selected tracks? This cannot be undone.');">
+        Delete Selected (<span class="bulk-count">0</span>)
+      </button>
+    </div>
+    <div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th><input type="checkbox" class="select-all" <?= $music ? '' : 'disabled' ?>></th><th>Cover</th><th>Title</th><th>Artist</th><th>Album</th><th>Audio</th><th></th></tr></thead>
+      <tbody>
+      <?php foreach ($music as $t): ?>
+        <tr>
+          <td><input type="checkbox" name="ids[]" value="<?= h($t['id']) ?>" class="row-check"></td>
+          <td><img src="<?= h(image_url('music', $t['id'])) ?>" alt=""></td>
+          <td><?= h($t['title']) ?></td>
+          <td><?= h($t['artist']) ?></td>
+          <td><?= h($t['album']) ?></td>
+          <td><?php if ($t['audio']): ?><span class="file-status-yes">Uploaded</span><?php else: ?><span class="file-status-no">Missing</span><?php endif; ?></td>
+          <td>
+            <button type="submit" name="delete_id" value="<?= h($t['id']) ?>" class="btn btn-danger btn-sm"
+                    onclick="return confirm('Delete this track?');">Delete</button>
+          </td>
+        </tr>
+      <?php endforeach; ?>
+      </tbody>
+    </table>
+    </div>
+  </form>
 </div>
 
 <?php require __DIR__ . '/includes/admin_footer.php'; ?>

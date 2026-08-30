@@ -93,6 +93,55 @@
     });
   });
 
+  // ---- Admin tables: select-all + bulk delete button state ----
+  document.querySelectorAll('form.bulk-form').forEach(function (form) {
+    var selectAll = form.querySelector('.select-all');
+    var bulkBtn = form.querySelector('.bulk-delete-btn');
+    var countEl = form.querySelector('.bulk-count');
+    var rowChecks = form.querySelectorAll('.row-check');
+
+    function refresh() {
+      var checked = form.querySelectorAll('.row-check:checked').length;
+      if (bulkBtn) bulkBtn.disabled = checked === 0;
+      if (countEl) countEl.textContent = checked;
+      if (selectAll) {
+        selectAll.checked = checked > 0 && checked === rowChecks.length;
+        selectAll.indeterminate = checked > 0 && checked < rowChecks.length;
+      }
+    }
+
+    if (selectAll) {
+      selectAll.addEventListener('change', function () {
+        rowChecks.forEach(function (cb) { cb.checked = selectAll.checked; });
+        refresh();
+      });
+    }
+    rowChecks.forEach(function (cb) { cb.addEventListener('change', refresh); });
+    refresh();
+  });
+
+  // ---- Admin movies: toggle "featured" straight from the list ----
+  document.querySelectorAll('.featured-toggle').forEach(function (cb) {
+    cb.addEventListener('change', function () {
+      var checked = cb.checked;
+      cb.disabled = true;
+      var body = new URLSearchParams();
+      body.set('toggle_featured', cb.dataset.id);
+      body.set('value', checked ? '1' : '0');
+      fetch(window.location.href, { method: 'POST', body: body })
+        .then(function (r) { if (!r.ok) throw new Error('request failed'); return r.json(); })
+        .then(function (data) {
+          if (!data.ok) throw new Error('update failed');
+          cb.disabled = false;
+        })
+        .catch(function () {
+          cb.checked = !checked; // revert on failure
+          cb.disabled = false;
+          alert('Could not update featured status. Please try again.');
+        });
+    });
+  });
+
   // ---- Admin sidebar drawer ----
   var adminToggle = document.getElementById('adminSidebarToggle');
   var adminSidebar = document.getElementById('adminSidebar');
