@@ -6,7 +6,7 @@
  */
 class JsonDB
 {
-    private string $file;
+    private $file;
 
     public function __construct(string $collection)
     {

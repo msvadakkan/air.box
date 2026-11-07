@@ -26,7 +26,7 @@ function require_admin(): array
     return $user;
 }
 
-function attempt_login(string $email, string $password): array|string
+function attempt_login(string $email, string $password)
 {
     $email = strtolower(trim($email));
     $user = users_db()->where(fn($u) => $u['email'] === $email)[0] ?? null;
@@ -45,7 +45,7 @@ function logout_user(): void
     session_destroy();
 }
 
-function change_password(string $userId, string $currentPassword, string $newPassword, string $confirmPassword): true|string
+function change_password(string $userId, string $currentPassword, string $newPassword, string $confirmPassword)
 {
     $user = users_db()->find($userId);
     if (!$user || !password_verify($currentPassword, $user['password'])) {

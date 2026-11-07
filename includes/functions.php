@@ -4,7 +4,7 @@ function h(?string $str): string
     return htmlspecialchars($str ?? '', ENT_QUOTES, 'UTF-8');
 }
 
-function redirect(string $url): never
+function redirect(string $url)
 {
     header('Location: ' . $url);
     exit;
@@ -74,19 +74,20 @@ function stream_file_with_range(string $path, string $mime): void
 
 function mime_for_ext(string $ext): string
 {
-    return match ($ext) {
-        'mp4' => 'video/mp4',
-        'webm' => 'video/webm',
-        'mp3' => 'audio/mpeg',
-        'wav' => 'audio/wav',
-        'ogg' => 'audio/ogg',
-        'pdf' => 'application/pdf',
-        'svg' => 'image/svg+xml',
-        'png' => 'image/png',
-        'jpg', 'jpeg' => 'image/jpeg',
-        'webp' => 'image/webp',
-        default => 'application/octet-stream',
-    };
+    switch ($ext) {
+        case 'mp4': return 'video/mp4';
+        case 'webm': return 'video/webm';
+        case 'mp3': return 'audio/mpeg';
+        case 'wav': return 'audio/wav';
+        case 'ogg': return 'audio/ogg';
+        case 'pdf': return 'application/pdf';
+        case 'svg': return 'image/svg+xml';
+        case 'png': return 'image/png';
+        case 'jpg':
+        case 'jpeg': return 'image/jpeg';
+        case 'webp': return 'image/webp';
+        default: return 'application/octet-stream';
+    }
 }
 
 function movies_db(): JsonDB
@@ -118,23 +119,23 @@ function image_url(string $type, string $id): string
 
 function item_link(string $type, string $id): string
 {
-    $page = match ($type) {
-        'movie' => 'watch.php',
-        'book' => 'book.php',
-        'music' => 'listen.php',
-        default => 'index.php',
-    };
+    switch ($type) {
+        case 'movie': $page = 'watch.php'; break;
+        case 'book': $page = 'book.php'; break;
+        case 'music': $page = 'listen.php'; break;
+        default: $page = 'index.php';
+    }
     return base_url($page . '?id=' . urlencode($id));
 }
 
 function item_action_label(string $type): string
 {
-    return match ($type) {
-        'movie' => 'Play',
-        'book' => 'Read',
-        'music' => 'Listen',
-        default => 'Open',
-    };
+    switch ($type) {
+        case 'movie': return 'Play';
+        case 'book': return 'Read';
+        case 'music': return 'Listen';
+        default: return 'Open';
+    }
 }
 
 /**
@@ -175,12 +176,12 @@ function handle_upload(string $fieldName, array $allowedExt, int $maxBytes, stri
 function render_card(array $item, string $type): void
 {
     $title = $item['title'];
-    $meta = match ($type) {
-        'movie' => trim(($item['year'] ?? '') . ' · ' . ($item['genre'] ?? '')),
-        'book' => $item['author'] ?? '',
-        'music' => $item['artist'] ?? '',
-        default => '',
-    };
+    switch ($type) {
+        case 'movie': $meta = trim(($item['year'] ?? '') . ' · ' . ($item['genre'] ?? '')); break;
+        case 'book': $meta = $item['author'] ?? ''; break;
+        case 'music': $meta = $item['artist'] ?? ''; break;
+        default: $meta = '';
+    }
     $desc = $item['description'] ?? '';
     $img = image_url($type, $item['id']);
     $link = item_link($type, $item['id']);

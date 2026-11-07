@@ -8,12 +8,12 @@ $movies = movies_db()->all();
 $books = books_db()->all();
 $music = music_db()->all();
 
-$pageTitle = match ($type) {
-    'movie' => 'Movies',
-    'book' => 'Books',
-    'music' => 'Music',
-    default => 'Home',
-};
+switch ($type) {
+    case 'movie': $pageTitle = 'Movies'; break;
+    case 'book': $pageTitle = 'Books'; break;
+    case 'music': $pageTitle = 'Music'; break;
+    default: $pageTitle = 'Home';
+}
 $activeNav = $type ?: 'home';
 
 require __DIR__ . '/includes/header.php';
@@ -83,7 +83,11 @@ require __DIR__ . '/includes/header.php';
     <?php endforeach; ?>
 
 <?php else:
-    $items = match ($type) { 'movie' => $movies, 'book' => $books, 'music' => $music };
+    switch ($type) {
+        case 'movie': $items = $movies; break;
+        case 'book': $items = $books; break;
+        default: $items = $music;
+    }
     ?>
     <div class="tabs">
       <a href="<?= base_url('index.php') ?>" class="tab">All</a>

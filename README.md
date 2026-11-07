@@ -10,7 +10,7 @@ A Netflix-style streaming app for movies, books, and music — built with plain 
 
 ## Requirements
 
-- PHP 8.1+ (no extensions beyond the defaults). On Windows: [XAMPP](https://www.apachefriends.org/) or the plain [php.net](https://www.php.net/downloads) binary. On Linux: your distro's package (`apt install php php-fpm`, `dnf install php-fpm`, etc.) — Ubuntu 22.04+/Debian 12+/RHEL 9+ all ship 8.1 or newer by default.
+- PHP 7.4+ (no extensions beyond the defaults). Deliberately written in plain, old-style PHP — no `match`, union return types, or other 8.0+-only syntax — so it runs as-is on whatever PHP ships with your distro, including the default `apt install php` on older Raspberry Pi OS / Debian releases. On Windows: [XAMPP](https://www.apachefriends.org/) or the plain [php.net](https://www.php.net/downloads) binary. On Linux: your distro's package (`apt install php php-fpm`, `dnf install php-fpm`, etc.).
 
 ## Running it
 
@@ -53,15 +53,18 @@ sudo ln -s /etc/nginx/sites-available/air.box /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx
 
 # 4. Apply the upload/execution limits from php.ini (PHP-FPM's default 8MB
-#    upload ceiling is far below the app's 1GB movie limit) — either paste
-#    them into /etc/php/8.1/fpm/php.ini, or scope them to just this site
-#    via a PHP-FPM pool file. nginx also enforces its own upload ceiling
-#    independently of PHP (client_max_body_size, set in nginx.conf.example):
+#    upload ceiling is far below the app's 1GB movie limit). Check your
+#    version first (path depends on it, e.g. 7.4 vs 8.2):
+php -v
+#    Then either paste these into that version's php.ini, or scope them to
+#    just this site via its PHP-FPM pool file (substitute your version below).
+#    nginx also enforces its own upload ceiling independently of PHP
+#    (client_max_body_size, set in nginx.conf.example):
 echo 'php_admin_value[upload_max_filesize] = 1030M
 php_admin_value[post_max_size] = 1030M
 php_admin_value[memory_limit] = 256M
-php_admin_value[max_execution_time] = 600' | sudo tee -a /etc/php/8.1/fpm/pool.d/www.conf
-sudo systemctl restart php8.1-fpm   # or whatever your php-fpm service is named
+php_admin_value[max_execution_time] = 600' | sudo tee -a /etc/php/7.4/fpm/pool.d/www.conf
+sudo systemctl restart php7.4-fpm   # or whatever your php-fpm service is named, e.g. php8.2-fpm
 ```
 
 `router.php` and `start.bat` aren't used in this setup — they're for the PHP built-in dev server and Windows convenience respectively. nginx talks to PHP-FPM directly.
