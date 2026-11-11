@@ -7,9 +7,9 @@ $books = books_db()->all();
 $music = music_db()->all();
 $users = users_db()->all();
 
-$moviesWithFile = count(array_filter($movies, fn($m) => !empty($m['video'])));
-$booksWithFile = count(array_filter($books, fn($b) => !empty($b['pdf'])));
-$musicWithFile = count(array_filter($music, fn($m) => !empty($m['audio'])));
+$moviesWithFile = count(array_filter($movies, function ($m) { return !empty($m['video']); }));
+$booksWithFile = count(array_filter($books, function ($b) { return !empty($b['pdf']); }));
+$musicWithFile = count(array_filter($music, function ($m) { return !empty($m['audio']); }));
 
 $pageTitle = 'Dashboard';
 $activeAdminNav = 'dashboard';

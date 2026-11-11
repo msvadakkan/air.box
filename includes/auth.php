@@ -29,7 +29,7 @@ function require_admin(): array
 function attempt_login(string $email, string $password)
 {
     $email = strtolower(trim($email));
-    $user = users_db()->where(fn($u) => $u['email'] === $email)[0] ?? null;
+    $user = users_db()->where(function ($u) use ($email) { return $u['email'] === $email; })[0] ?? null;
 
     if (!$user || !password_verify($password, $user['password'])) {
         return 'Incorrect email or password.';

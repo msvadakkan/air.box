@@ -20,7 +20,7 @@ function seed_demo_data(): void
 function seed_admin_user(): void
 {
     $db = users_db();
-    if ($db->where(fn($u) => $u['role'] === 'admin')) return;
+    if ($db->where(function ($u) { return $u['role'] === 'admin'; })) return;
 
     $db->insert([
         'name' => 'Administrator',
@@ -104,7 +104,7 @@ function seed_placeholder_pdf(string $dir, string $id, string $title, string $bo
     $path = $dir . '/' . $filename;
     if (file_exists($path)) return $filename;
 
-    $escape = fn($s) => str_replace(['\\', '(', ')'], ['\\\\', '\\(', '\\)'], $s);
+    $escape = function ($s) { return str_replace(['\\', '(', ')'], ['\\\\', '\\(', '\\)'], $s); };
     $titleEsc = $escape($title);
 
     $lines = explode("\n", wordwrap($body, 78));

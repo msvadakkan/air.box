@@ -20,7 +20,7 @@ require __DIR__ . '/includes/header.php';
 ?>
 
 <?php if ($type === ''):
-    $featuredPool = array_values(array_filter($movies, fn($m) => !empty($m['featured']))) ?: $movies;
+    $featuredPool = array_values(array_filter($movies, function ($m) { return !empty($m['featured']); })) ?: $movies;
     $slides = array_map(function ($m) {
         return [
             'title' => $m['title'],

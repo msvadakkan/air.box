@@ -95,7 +95,7 @@ class JsonDB
         $found = false;
         $this->withLock(function (array $docs) use ($id, &$found) {
             $before = count($docs);
-            $docs = array_values(array_filter($docs, fn($d) => ($d['id'] ?? null) !== $id));
+            $docs = array_values(array_filter($docs, function ($d) use ($id) { return ($d['id'] ?? null) !== $id; }));
             $found = count($docs) !== $before;
             return $docs;
         });
@@ -109,7 +109,7 @@ class JsonDB
         $removed = 0;
         $this->withLock(function (array $docs) use ($ids, &$removed) {
             $before = count($docs);
-            $docs = array_values(array_filter($docs, fn($d) => !isset($ids[(string)($d['id'] ?? '')])));
+            $docs = array_values(array_filter($docs, function ($d) use ($ids) { return !isset($ids[(string)($d['id'] ?? '')]); }));
             $removed = $before - count($docs);
             return $docs;
         });

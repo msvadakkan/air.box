@@ -54,7 +54,7 @@ function delete_book(string $id): int
 }
 
 $books = books_db()->all();
-usort($books, fn($a, $b) => strcmp($b['created_at'] ?? '', $a['created_at'] ?? ''));
+usort($books, function ($a, $b) { return strcmp($b['created_at'] ?? '', $a['created_at'] ?? ''); });
 
 $pageTitle = 'Books';
 $activeAdminNav = 'books';

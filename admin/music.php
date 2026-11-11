@@ -54,7 +54,7 @@ function delete_track(string $id): int
 }
 
 $music = music_db()->all();
-usort($music, fn($a, $b) => strcmp($b['created_at'] ?? '', $a['created_at'] ?? ''));
+usort($music, function ($a, $b) { return strcmp($b['created_at'] ?? '', $a['created_at'] ?? ''); });
 
 $pageTitle = 'Music';
 $activeAdminNav = 'music';

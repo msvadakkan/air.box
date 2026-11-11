@@ -64,7 +64,7 @@ function delete_movie(string $id): int
 }
 
 $movies = movies_db()->all();
-usort($movies, fn($a, $b) => strcmp($b['created_at'] ?? '', $a['created_at'] ?? ''));
+usort($movies, function ($a, $b) { return strcmp($b['created_at'] ?? '', $a['created_at'] ?? ''); });
 
 $pageTitle = 'Movies';
 $activeAdminNav = 'movies';
