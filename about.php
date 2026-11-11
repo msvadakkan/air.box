@@ -14,7 +14,6 @@ foreach ([
         $stats[] = [number_format($n), $n === 1 ? $one : $many];
     }
 }
-$stats[] = ['Free', 'No account needed'];
 
 $pageTitle = 'About';
 $activeNav = 'about';
@@ -42,6 +41,40 @@ require __DIR__ . '/includes/header.php';
       <?php foreach ($stats as $stat): ?>
         <div class="stat-card"><div class="num"><?= h($stat[0]) ?></div><div class="label"><?= h($stat[1]) ?></div></div>
       <?php endforeach; ?>
+    </div>
+
+    <div class="panel">
+      <h2>About Rotana Jet</h2>
+      <p>
+        Rotana Jet Aviation provides worldwide executive private jet charter
+        solutions for private individuals, corporate groups, sports teams,
+        business executives and senior government officials. Its long-range
+        fleet is privately owned, registered in the United Arab Emirates and
+        operates under GCAA regulatory oversight.
+      </p>
+      <div class="about-fleet">
+        <div class="about-fleet-item">
+          <h3>Founded</h3>
+          <p>Established in late 2010 by His Highness Dr. Sheikh Ahmed bin Saif Al-Nahyan.</p>
+        </div>
+        <div class="about-fleet-item">
+          <h3>Base</h3>
+          <p>Al Bateen Airport, Abu Dhabi, 10 km from the city centre — convenient for clients across Dubai, Abu Dhabi, the GCC and MENA region.</p>
+        </div>
+        <div class="about-fleet-item">
+          <h3>Fleet</h3>
+          <p>The Gulfstream G450 carries up to 14 passengers with true intercontinental range. In 2012 it was joined by a bespoke 50-seat Airbus A319 Corporate Jet, able to fly non-stop from Abu Dhabi to London, Singapore, Johannesburg or Casablanca.</p>
+        </div>
+        <div class="about-fleet-item">
+          <h3>Technical operations</h3>
+          <p>Aircraft maintenance and component support for the G450 and A319-CJ from 2,500 m² facilities at Al Bateen Airport.</p>
+        </div>
+      </div>
+      <p>
+        In the air and on the ground, Rotana Jet continues to set service
+        benchmarks in safety, quality and customer service, supported by a
+        management team with executive experience at airlines worldwide.
+      </p>
     </div>
 
     <div class="panel">
@@ -73,15 +106,6 @@ require __DIR__ . '/includes/header.php';
         Movies, books, and music are streamed from the server as you use them
         and aren't offered as downloads, so there's nothing to save or manage
         on your device.
-      </p>
-    </div>
-
-    <div class="panel">
-      <h2>Who made it</h2>
-      <p>
-        <?= h(SITE_NAME) ?> was developed by msv. It's built with plain HTML,
-        CSS, JavaScript, and PHP, with no frameworks and no database server,
-        so it runs on almost anything, from a Windows PC to a Raspberry Pi.
       </p>
     </div>
   </section>
