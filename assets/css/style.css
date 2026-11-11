@@ -650,3 +650,139 @@ a:focus-visible, input:focus-visible, textarea:focus-visible {
   .hero-title { font-size: 26px; }
   .hero-desc { font-size: 14px; -webkit-line-clamp: 3; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
 }
+
+/* ---------- Rotana Bot (chat window, includes/footer.php + assets/js/bot.js) ---------- */
+.bot { position: fixed; right: max(20px, env(safe-area-inset-right)); bottom: max(20px, env(safe-area-inset-bottom)); z-index: 150; font-size: 14px; }
+.bot-launcher {
+  display: inline-flex; align-items: center; gap: 9px; height: 52px; padding: 0 20px 0 16px;
+  border: none; border-radius: 999px; cursor: pointer; font: inherit; font-weight: 700; font-size: 15px;
+  background: linear-gradient(135deg, var(--red), var(--red-dim)); color: #fff;
+  box-shadow: 0 8px 24px rgba(196, 23, 44, 0.35); transition: transform .2s var(--ease), box-shadow .2s var(--ease);
+}
+.bot-launcher:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(196, 23, 44, 0.42); }
+.bot-launcher:focus-visible { outline: 2px solid var(--text); outline-offset: 3px; }
+.bot-launcher svg { width: 24px; height: 24px; flex-shrink: 0; }
+.bot.open .bot-launcher { display: none; }
+
+.bot-panel {
+  position: absolute; right: 0; bottom: 0; width: 380px; height: min(600px, calc(100vh - 110px));
+  display: flex; flex-direction: column; overflow: hidden;
+  background: var(--bg-elev); color: var(--text); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow);
+  animation: botIn .22s var(--ease);
+}
+.bot-panel[hidden] { display: none; }
+@keyframes botIn { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: none; } }
+
+.bot-head { display: flex; align-items: center; gap: 12px; padding: 14px 14px 14px 16px; background: linear-gradient(135deg, var(--red), var(--red-dim)); color: #fff; }
+.bot-avatar { width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,0.18); display: grid; place-items: center; flex-shrink: 0; }
+.bot-avatar svg { width: 22px; height: 22px; }
+.bot-title { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.bot-title strong { font-size: 16px; }
+.bot-title span { font-size: 12.5px; opacity: 0.88; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bot-close { width: 36px; height: 36px; border: none; border-radius: 50%; background: transparent; color: #fff; cursor: pointer; display: grid; place-items: center; }
+.bot-close:hover { background: rgba(255,255,255,0.16); }
+.bot-close svg { width: 20px; height: 20px; }
+
+.bot-messages { flex: 1; overflow-y: auto; padding: 16px 14px; display: flex; flex-direction: column; gap: 12px; background: var(--bg); overscroll-behavior: contain; }
+.bot-msg { display: flex; flex-direction: column; max-width: 88%; }
+.bot-msg-bot { align-self: flex-start; align-items: flex-start; }
+.bot-msg-user { align-self: flex-end; align-items: flex-end; }
+.bot-bubble { padding: 10px 13px; border-radius: 16px; line-height: 1.5; overflow-wrap: anywhere; }
+.bot-msg-bot .bot-bubble { background: var(--bg-elev); border: 1px solid var(--border); border-bottom-left-radius: 5px; }
+.bot-msg-user .bot-bubble { background: var(--red); color: #fff; border-bottom-right-radius: 5px; }
+.bot-text { white-space: pre-line; }
+
+.bot-suggest { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.bot-suggest-label { width: 100%; font-size: 12px; color: var(--text-faint); }
+.bot-chip {
+  border: 1px solid var(--border); background: var(--bg-elev); color: var(--text); font: inherit; font-size: 13px;
+  padding: 7px 12px; border-radius: 999px; cursor: pointer; text-align: start; line-height: 1.35;
+  transition: border-color .15s, color .15s, background .15s;
+}
+.bot-chip:hover { border-color: var(--red); color: var(--red); }
+
+.bot-typing { display: inline-flex; gap: 4px; padding: 13px 14px; }
+.bot-typing span { width: 7px; height: 7px; border-radius: 50%; background: var(--text-faint); animation: botDot 1.1s infinite ease-in-out; }
+.bot-typing span:nth-child(2) { animation-delay: .15s; }
+.bot-typing span:nth-child(3) { animation-delay: .3s; }
+@keyframes botDot { 0%, 80%, 100% { opacity: .3; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
+
+.bot-form { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--border); background: var(--bg-elev); }
+.bot-input {
+  flex: 1; min-width: 0; height: 44px; padding: 0 14px; border-radius: 999px; font: inherit; font-size: 15px;
+  border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text);
+}
+.bot-input:focus { outline: none; border-color: var(--red); }
+.bot-send {
+  width: 44px; height: 44px; flex-shrink: 0; border: none; border-radius: 50%; cursor: pointer;
+  background: var(--red); color: #fff; display: grid; place-items: center; transition: background .15s;
+}
+.bot-send:hover { background: var(--red-dim); }
+.bot-send:disabled { opacity: .5; cursor: default; }
+.bot-send svg { width: 20px; height: 20px; }
+
+@media (max-width: 640px) {
+  .bot { right: max(14px, env(safe-area-inset-right)); bottom: max(14px, env(safe-area-inset-bottom)); }
+  .bot-launcher { height: 54px; width: 54px; padding: 0; justify-content: center; }
+  .bot-launcher-label { display: none; }
+  .bot.open { inset: 0; }
+  .bot-panel { position: fixed; inset: 0; width: auto; height: auto; border-radius: 0; border: none; }
+  .bot-head { padding-top: max(14px, env(safe-area-inset-top)); }
+  .bot-form { padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+  .bot-input { font-size: 16px; } /* stops iOS zooming in on focus */
+  html.bot-open, html.bot-open body { overflow: hidden; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bot-panel { animation: none; }
+  .bot-typing span { animation: none; opacity: .6; }
+}
+
+/* ---------- Admin: Rotana Bot page ---------- */
+.bot-admin-status { color: var(--text-dim); margin: -6px 0 18px; font-size: 14px; }
+.bot-import-status { font-size: 14px; color: var(--text-dim); margin: 0 0 14px; }
+.bot-import-status.error { color: var(--red); }
+.bot-mode { display: flex; gap: 20px; flex-wrap: wrap; margin: 4px 0 16px; font-size: 14px; }
+.bot-mode label { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; }
+.bot-mode input { accent-color: var(--red); }
+.bot-paste summary { cursor: pointer; color: var(--text-dim); font-size: 14px; margin-bottom: 10px; }
+.bot-paste textarea { min-height: 160px; }
+.bot-test-row { display: flex; gap: 10px; }
+.bot-test-row input { flex: 1; min-width: 0; }
+.bot-test-result { margin-top: 14px; padding: 14px 16px; border-radius: var(--radius); background: var(--bg-elev-2); white-space: pre-line; line-height: 1.55; }
+.bot-test-result .bot-test-meta { display: block; font-size: 12.5px; color: var(--text-dim); margin-bottom: 6px; white-space: normal; }
+.bot-qa-table td { white-space: normal; vertical-align: top; }
+.bot-qa-table td.bot-q { font-weight: 600; min-width: 200px; max-width: 320px; }
+.bot-qa-table td.bot-a { color: var(--text-dim); min-width: 240px; }
+.bot-qa-table td.bot-actions { white-space: nowrap; }
+.bot-kind { display: inline-block; margin-left: 6px; }
+
+/* Rotana Bot photos */
+.bot-images { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 10px; }
+.bot-images-one { grid-template-columns: 1fr; }
+.bot-photo { display: block; padding: 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: #fff; cursor: zoom-in; }
+.bot-photo img { display: block; width: 100%; height: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+.bot-images-one .bot-photo img { aspect-ratio: auto; height: auto; max-height: 320px; object-fit: contain; }
+.bot-photo:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+.bot-msg-bot:has(.bot-images) { max-width: 94%; }
+.bot-viewer {
+  position: fixed; inset: 0; z-index: 210; display: grid; place-items: center; padding: 24px;
+  background: rgba(0, 0, 0, 0.88); cursor: zoom-out; animation: botIn .18s var(--ease);
+}
+.bot-viewer img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 6px; background: #fff; }
+.bot-viewer-close {
+  position: absolute; top: max(14px, env(safe-area-inset-top)); right: max(14px, env(safe-area-inset-right));
+  width: 44px; height: 44px; border: none; border-radius: 50%; background: rgba(255,255,255,0.16); color: #fff;
+  display: grid; place-items: center; cursor: pointer;
+}
+.bot-viewer-close svg { width: 22px; height: 22px; }
+.bot-test-images { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.bot-test-images img { height: 110px; border-radius: 8px; border: 1px solid var(--border); background: #fff; }
+.bot-photos-cell { white-space: nowrap; }
+.data-table .bot-photos-cell img { width: 72px; height: 48px; object-fit: cover; border-radius: 6px; vertical-align: middle; background: #fff; }
+.bot-photo-more { margin-left: 6px; font-size: 12px; color: var(--text-dim); }
+.bot-photo-edit { display: flex; flex-wrap: wrap; gap: 14px; }
+.bot-photo-card { width: 200px; display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+.bot-photo-card img { width: 100%; height: 130px; object-fit: contain; border: 1px solid var(--border); border-radius: 8px; background: #fff; }
+.bot-photo-card label { display: inline-flex; align-items: center; gap: 6px; color: var(--text-dim); }
+.bot-photo-card select { width: 100%; font: inherit; font-size: 12.5px; padding: 6px; border-radius: 6px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text); }

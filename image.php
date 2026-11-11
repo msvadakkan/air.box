@@ -7,6 +7,20 @@ require __DIR__ . '/includes/config.php';
 $type = $_GET['type'] ?? '';
 $id = $_GET['id'] ?? '';
 
+// Rotana Bot photos: the id is the photo's file name (random hex, checked).
+if ($type === 'bot') {
+    $path = BOT_IMAGE_DIR . '/' . $id;
+    if (!bot_valid_image_name($id) || !is_file($path)) {
+        http_response_code(404);
+        exit;
+    }
+    header('Content-Type: ' . mime_for_ext(file_ext($path)));
+    header('Cache-Control: public, max-age=604800, immutable'); // names never get reused
+    header('Content-Length: ' . filesize($path));
+    readfile($path);
+    exit;
+}
+
 $map = [
     'movie' => ['db' => movies_db(), 'field' => 'thumbnail', 'dir' => MOVIE_THUMB_DIR],
     'book' => ['db' => books_db(), 'field' => 'cover', 'dir' => BOOK_COVER_DIR],

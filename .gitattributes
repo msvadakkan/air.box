@@ -1,0 +1,8 @@
+# Scripts and configs that run on the Raspberry Pi must keep LF line endings,
+# even on Windows checkouts with core.autocrlf=true.
+deploy/raspberry-pi/** text eol=lf
+# Windows batch files need CRLF.
+*.bat text eol=crlf
+
+# Third-party minified files: keep byte-for-byte as published.
+assets/vendor/** -text

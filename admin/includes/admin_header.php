@@ -34,6 +34,7 @@ $pageTitle = $pageTitle ?? 'Admin';
       <li><a href="<?= base_url('admin/movies.php') ?>" class="<?= ($activeAdminNav ?? '') === 'movies' ? 'active' : '' ?>">Movies</a></li>
       <li><a href="<?= base_url('admin/books.php') ?>" class="<?= ($activeAdminNav ?? '') === 'books' ? 'active' : '' ?>">Books</a></li>
       <li><a href="<?= base_url('admin/music.php') ?>" class="<?= ($activeAdminNav ?? '') === 'music' ? 'active' : '' ?>">Music</a></li>
+      <li><a href="<?= base_url('admin/bot.php') ?>" class="<?= ($activeAdminNav ?? '') === 'bot' ? 'active' : '' ?>"><?= h(bot_settings()['name']) ?></a></li>
       <li><a href="<?= base_url('admin/settings.php') ?>" class="<?= ($activeAdminNav ?? '') === 'settings' ? 'active' : '' ?>">Settings</a></li>
       <li style="margin-top:16px;border-top:1px solid var(--border);padding-top:16px;">
         <a href="<?= base_url('index.php') ?>">&larr; Back to site</a>

@@ -11,6 +11,7 @@ define('BOOK_PDF_DIR', STORAGE_DIR . '/books/pdfs');
 define('BOOK_COVER_DIR', STORAGE_DIR . '/books/covers');
 define('MUSIC_AUDIO_DIR', STORAGE_DIR . '/music/audio');
 define('MUSIC_COVER_DIR', STORAGE_DIR . '/music/covers');
+define('BOT_IMAGE_DIR', STORAGE_DIR . '/bot/images');     // Rotana Bot photos
 
 define('SITE_NAME', 'air.box');
 
@@ -26,7 +27,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 foreach ([
     DATA_DIR, MOVIE_VIDEO_DIR, MOVIE_THUMB_DIR, BOOK_PDF_DIR,
-    BOOK_COVER_DIR, MUSIC_AUDIO_DIR, MUSIC_COVER_DIR,
+    BOOK_COVER_DIR, MUSIC_AUDIO_DIR, MUSIC_COVER_DIR, BOT_IMAGE_DIR,
 ] as $dir) {
     if (!is_dir($dir)) {
         mkdir($dir, 0775, true);
@@ -36,6 +37,7 @@ foreach ([
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/functions.php';
 require_once __DIR__ . '/auth.php';
+require_once __DIR__ . '/bot.php';
 require_once __DIR__ . '/seed.php';
 
 seed_demo_data();

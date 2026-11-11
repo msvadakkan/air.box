@@ -8,8 +8,16 @@
 /storage/books/covers/*
 /storage/music/audio/*
 /storage/music/covers/*
+/storage/bot/
 !/storage/**/.htaccess
 
 # OS/editor cruft
 .DS_Store
 Thumbs.db
+
+# Raspberry Pi image builds (deploy/raspberry-pi/build-image.bat) and the
+# login details generated with them.
+/dist/
+
+# Browser automation screenshots
+/.playwright-mcp/

@@ -56,6 +56,25 @@ class JsonDB
         return $doc;
     }
 
+    /** Insert several documents in one write. With $replace, they become the whole collection. */
+    public function insertMany(array $docs, bool $replace = false): array
+    {
+        $now = date('c');
+        foreach ($docs as &$doc) {
+            if (empty($doc['id'])) {
+                $doc['id'] = bin2hex(random_bytes(8));
+            }
+            $doc['created_at'] = $doc['created_at'] ?? $now;
+        }
+        unset($doc);
+
+        $this->withLock(function (array $existing) use ($docs, $replace) {
+            return $replace ? $docs : array_merge($existing, $docs);
+        });
+
+        return $docs;
+    }
+
     public function update(string $id, array $fields): bool
     {
         $found = false;
@@ -81,6 +100,20 @@ class JsonDB
             return $docs;
         });
         return $found;
+    }
+
+    /** Delete several documents in one write. Returns how many were removed. */
+    public function deleteMany(array $ids): int
+    {
+        $ids = array_fill_keys(array_map('strval', $ids), true);
+        $removed = 0;
+        $this->withLock(function (array $docs) use ($ids, &$removed) {
+            $before = count($docs);
+            $docs = array_values(array_filter($docs, fn($d) => !isset($ids[(string)($d['id'] ?? '')])));
+            $removed = $before - count($docs);
+            return $docs;
+        });
+        return $removed;
     }
 
     /** Read-modify-write the whole collection under an exclusive lock. */

@@ -21,6 +21,7 @@ require __DIR__ . '/includes/admin_header.php';
   <div class="stat-card"><div class="num"><?= count($books) ?></div><div class="label">Books (<?= $booksWithFile ?> with PDF)</div></div>
   <div class="stat-card"><div class="num"><?= count($music) ?></div><div class="label">Tracks (<?= $musicWithFile ?> with audio)</div></div>
   <div class="stat-card"><div class="num"><?= count($users) ?></div><div class="label">Registered users</div></div>
+  <div class="stat-card"><div class="num"><?= count(bot_entries()) ?></div><div class="label"><?= h(bot_settings()['name']) ?> answers</div></div>
 </div>
 
 <div class="panel">
@@ -29,6 +30,7 @@ require __DIR__ . '/includes/admin_header.php';
     <a href="<?= base_url('admin/movies.php') ?>#upload" class="btn btn-accent btn-sm">+ Upload Movie</a>
     <a href="<?= base_url('admin/books.php') ?>#upload" class="btn btn-accent btn-sm">+ Upload Book</a>
     <a href="<?= base_url('admin/music.php') ?>#upload" class="btn btn-accent btn-sm">+ Upload Track</a>
+    <a href="<?= base_url('admin/bot.php') ?>#import" class="btn btn-accent btn-sm">Import Bot Answer Sheet</a>
   </div>
 </div>
 

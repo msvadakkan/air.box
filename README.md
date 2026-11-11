@@ -4,7 +4,7 @@ A Netflix-style streaming app for movies, books, and music — built with plain 
 
 ## Stack
 
-- **Frontend:** hand-written HTML/CSS/JS (no build step, no libraries)
+- **Frontend:** hand-written HTML/CSS/JS (no build step). The only library is [PDF.js](https://mozilla.github.io/pdf.js/), bundled in `assets/vendor/`, which the admin Rotana Bot page uses to read PDFs (text and photos).
 - **Backend:** PHP 8+
 - **"NoSQL" data layer:** `includes/db.php` — a small `JsonDB` class that stores each collection (`users`, `movies`, `books`, `music`) as a JSON document array on disk, with file locking for safe concurrent writes. No MongoDB/server install needed. Swappable for real MongoDB later if you want.
 
@@ -69,6 +69,10 @@ sudo systemctl restart php7.4-fpm   # or whatever your php-fpm service is named,
 
 `router.php` and `start.bat` aren't used in this setup — they're for the PHP built-in dev server and Windows convenience respectively. nginx talks to PHP-FPM directly.
 
+**Or as an offline Raspberry Pi device (Air_Box):**
+
+[`deploy/raspberry-pi/`](deploy/raspberry-pi/README.md) builds a ready-to-flash Raspberry Pi OS Lite image with the app preinstalled, its own **Air_Box** Wi-Fi hotspot, and a captive portal that opens air.box as soon as a phone joins. Double-click `deploy\raspberry-pi\build-image.bat` (needs Docker Desktop), then flash the result from `dist\` with Raspberry Pi Imager. No internet is needed on the device.
+
 ## First run
 
 On first request, the app auto-creates `data/*.json`, the `storage/` subfolders, a default **admin account**, and a few demo catalog entries (so the UI isn't empty). This happens once, guarded by `data/.seeded`.
@@ -93,12 +97,13 @@ Demo movies ship with posters but no video file (upload one from the admin panel
 
 ```
 includes/        Shared PHP: config, JsonDB, auth, helpers, header/footer, seed
-data/            JSON "collections" (users [admin accounts only], movies, books, music) — locked down
+data/            JSON "collections" (users [admin accounts only], movies, books, music, bot) — locked down
 storage/         Uploaded media, organized by type — locked down
-assets/          CSS/JS
+assets/          CSS/JS, self-hosted font, PDF.js (vendor/, used by the bot admin page)
 admin/           Admin-only panel (own login, dashboard, upload/manage per content type)
 image.php        Public poster/cover endpoint
 stream.php       Public movie/music streaming endpoint
+bot_api.php      Rotana Bot endpoint (includes/bot.php does the matching)
 book_stream.php  Public PDF endpoint
 index.php        Netflix-style browse home (hero + rows) — public
 watch.php / book.php / listen.php   Player pages — public
@@ -107,3 +112,20 @@ watch.php / book.php / listen.php   Player pages — public
 ## Admin panel
 
 `/admin/login.php` is the only login in the app, gated by a `role: "admin"` field on the user record. From the dashboard you can upload a movie (thumbnail + optional video file), a book (cover + optional PDF), or a track (cover + optional audio file), and delete any of them.
+
+## Rotana Bot
+
+A chat assistant that answers visitors' questions about Rotana Jet from a PDF you provide: a question-and-answer sheet, or any document such as a brochure, manual or slide deck. It appears as a chat button in the corner of every public page once a PDF has been imported.
+
+**Setting it up:** in the admin panel open **Rotana Bot**, choose the PDF and click **Import**. A large PDF takes a minute or two; progress is shown page by page.
+
+- **Question-and-answer sheets** are recognised whether the questions are marked `Q:` / `A:` (or `س:` / `ج:`), numbered, or simply end in `?` followed by their answers.
+- **Other documents** are learned topic by topic: each heading (in a slide deck, each slide's title) becomes a topic, with the text under it as the answer. Slides that are only pictures join the topic before them.
+- **Photos and diagrams** come along with the answer or topic they appear in, and the bot shows them under its reply; visitors can tap one to see it full screen. Tiny icons and logos repeated on every page are left out.
+- **Caution and warning notices and disclaimers** (`CAUTION`, `WARNING`, "for training purposes only", "refer to your operator manuals"…) are left out, so the bot never shows them. Headings that merely mention a warning, like "Fire Warning indication", stay.
+
+Afterwards, check the imported list, fix anything that came out wrong, and try questions in the **Test the bot** box. Each answer can be edited by hand, including its photos: remove one, move it to a different answer, or add your own. You can also add answers and change the bot's name, welcome message and "don't know" reply.
+
+**How it answers:** it compares the visitor's question with the PDF (allowing for different wording, common synonyms, small typos and plural/tense differences, in English and Arabic) and replies with the matching answer and its photos **exactly as they are in the PDF**. It never makes up answers. If nothing matches well enough, it says it doesn't know and suggests related questions. Because it matches words rather than understanding meaning, a question worded completely differently from the PDF may not be recognised; adding that wording as an extra question in the admin panel fixes it.
+
+**Offline:** everything runs on the server with no internet and no AI service, so it works on the Air_Box device. The admin page reads the PDF (text and photos) in the browser with [PDF.js](https://mozilla.github.io/pdf.js/), bundled in `assets/vendor/pdfjs/`. Photos are stored in `storage/bot/images/` and served through `image.php`, like posters. A scanned PDF that's only images has no text to read, so paste the text instead.

@@ -36,6 +36,23 @@ function stream_file_with_range(string $path, string $mime): void
         exit('File not found');
     }
 
+    // Under nginx with AIRBOX_ACCEL_PREFIX set (see deploy/raspberry-pi), let
+    // nginx send the file itself via X-Accel-Redirect: it handles Range
+    // requests natively and frees this PHP worker at once. Streaming through
+    // PHP instead holds one worker per viewer for the whole movie, and nginx
+    // would spool each response into a temp file on disk (the SD card, on a
+    // Pi). The prefix maps to an `internal` nginx location aliased to storage/,
+    // so the real path still never reaches the browser.
+    $accelPrefix = $_SERVER['AIRBOX_ACCEL_PREFIX'] ?? '';
+    $storageDir = STORAGE_DIR . '/';
+    if ($accelPrefix !== '' && strpos($path, $storageDir) === 0) {
+        header('Content-Type: ' . $mime);
+        header('Content-Disposition: inline; filename="' . basename($path) . '"');
+        header('X-Content-Type-Options: nosniff');
+        header('X-Accel-Redirect: ' . $accelPrefix . substr($path, strlen($storageDir)));
+        exit;
+    }
+
     $size = filesize($path);
     $start = 0;
     $end = $size - 1;
