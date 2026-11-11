@@ -16,7 +16,7 @@ define('BOT_IMAGE_DIR', STORAGE_DIR . '/bot/images');     // Rotana Bot photos
 define('SITE_NAME', 'air.box');
 
 // Upload limits
-define('MAX_VIDEO_BYTES', 1024 * 1024 * 1024); // 1GB
+define('MAX_VIDEO_BYTES', 2000 * 1024 * 1024); // ~2GB (stays inside 32-bit int)
 define('MAX_AUDIO_BYTES', 50 * 1024 * 1024);  // 50MB
 define('MAX_PDF_BYTES', 50 * 1024 * 1024);    // 50MB
 define('MAX_IMAGE_BYTES', 8 * 1024 * 1024);   // 8MB

@@ -88,7 +88,7 @@ require __DIR__ . '/includes/admin_header.php';
       <div class="field"><label>Duration (minutes)</label><input type="number" name="duration" value="<?= h($_POST['duration'] ?? '') ?>"></div>
       <div class="field field-full"><label>Description</label><textarea name="description"><?= h($_POST['description'] ?? '') ?></textarea></div>
       <div class="field"><label>Thumbnail image</label><input type="file" name="thumbnail" accept="image/*" required></div>
-      <div class="field"><label>Video file (mp4/webm, optional, up to 1GB)</label><input type="file" name="video" accept="video/mp4,video/webm"></div>
+      <div class="field"><label>Video file (mp4/webm, optional, up to 2GB)</label><input type="file" name="video" accept="video/mp4,video/webm"></div>
       <div class="field field-full"><label><input type="checkbox" name="featured" style="width:auto;"> Feature on homepage hero</label></div>
     </div>
     <div class="upload-progress" hidden>
