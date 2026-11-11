@@ -786,3 +786,24 @@ a:focus-visible, input:focus-visible, textarea:focus-visible {
 .bot-photo-card img { width: 100%; height: 130px; object-fit: contain; border: 1px solid var(--border); border-radius: 8px; background: #fff; }
 .bot-photo-card label { display: inline-flex; align-items: center; gap: 6px; color: var(--text-dim); }
 .bot-photo-card select { width: 100%; font: inherit; font-size: 12.5px; padding: 6px; border-radius: 6px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text); }
+
+/* ---- Admin upload queue ---- */
+.panel-hint { margin: -4px 0 16px; font-size: 14px; color: var(--text-dim); }
+.batch-summary { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-dim); }
+.batch-queue { display: grid; gap: 10px; margin-top: 16px; }
+.batch-queue[hidden] { display: none; }
+.batch-row { padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-elev); }
+.batch-row-head { display: flex; align-items: center; gap: 12px; }
+.batch-title {
+  flex: 1; min-width: 0; padding: 8px 10px; border-radius: 8px;
+  border: 1px solid var(--input-border); background: var(--input-bg);
+  color: var(--text); font-size: 14px; font-family: inherit;
+}
+.batch-title:focus { outline: none; border-color: var(--red); }
+.batch-size { font-size: 12px; color: var(--text-faint); white-space: nowrap; }
+.batch-track { height: 6px; border-radius: 999px; background: var(--bg-elev-2); overflow: hidden; margin-top: 10px; }
+.batch-bar { height: 100%; width: 0; background: var(--red); transition: width .15s linear; }
+.batch-row.done .batch-bar { background: #2e7d32; }
+.batch-row.failed .batch-bar { background: var(--red-dim); }
+.batch-status { margin-top: 6px; font-size: 12px; color: var(--text-dim); }
+.batch-row.failed .batch-status { color: var(--red); }

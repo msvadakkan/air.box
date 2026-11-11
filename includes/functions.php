@@ -100,7 +100,9 @@ function mime_for_ext(string $ext): string
         case 'pdf': return 'application/pdf';
         case 'svg': return 'image/svg+xml';
         case 'png': return 'image/png';
+        case 'avif': return 'image/avif';
         case 'jpg':
+        case 'jfif':
         case 'jpeg': return 'image/jpeg';
         case 'webp': return 'image/webp';
         default: return 'application/octet-stream';
@@ -188,6 +190,15 @@ function handle_upload(string $fieldName, array $allowedExt, int $maxBytes, stri
     }
 
     return ['ok' => true, 'filename' => $filename];
+}
+
+/** Send a JSON response and stop (used by the batch upload queue). */
+function json_respond(array $payload): void
+{
+    header('Content-Type: application/json; charset=utf-8');
+    header('Cache-Control: no-store');
+    echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    exit;
 }
 
 function render_card(array $item, string $type): void

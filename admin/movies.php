@@ -20,14 +20,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add')
     $featured = isset($_POST['featured']);
 
     if ($title === '') $errors[] = 'Title is required.';
+    if (!empty($_POST['ajax']) && $errors) json_respond(['ok' => false, 'error' => implode(' ', $errors)]);
 
     if (!$errors) {
         $id = bin2hex(random_bytes(8));
-        $thumb = handle_upload('thumbnail', ['jpg', 'jpeg', 'png', 'webp', 'svg'], MAX_IMAGE_BYTES, MOVIE_THUMB_DIR, $id, true);
-        if (!$thumb['ok']) $errors[] = $thumb['error'];
+        $thumb = handle_upload('thumbnail', ['jpg', 'jpeg', 'jfif', 'png', 'webp', 'avif', 'svg'], MAX_IMAGE_BYTES, MOVIE_THUMB_DIR, $id, false);
+        if (!$thumb['ok']) $errors[] = 'Poster image: ' . $thumb['error'];
 
         $video = handle_upload('video', ['mp4', 'webm'], MAX_VIDEO_BYTES, MOVIE_VIDEO_DIR, $id, false);
-        if (!$video['ok']) $errors[] = $video['error'];
+        if (!$video['ok']) $errors[] = 'Video file: ' . $video['error'];
+
+        // Don't leave a multi-GB upload behind when another field failed.
+        if ($errors) {
+            if (!empty($thumb['filename'])) @unlink(MOVIE_THUMB_DIR . '/' . $thumb['filename']);
+            if (!empty($video['filename'])) @unlink(MOVIE_VIDEO_DIR . '/' . $video['filename']);
+        }
 
         if (!$errors) {
             movies_db()->insert([
@@ -35,9 +42,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add')
                 'year' => $year, 'duration' => $duration,
                 'thumbnail' => $thumb['filename'], 'video' => $video['filename'], 'featured' => $featured,
             ]);
+            if (!empty($_POST['ajax'])) json_respond(['ok' => true, 'id' => $id, 'title' => $title]);
             redirect(base_url('admin/movies.php?added=1'));
         }
     }
+
+    if (!empty($_POST['ajax']) && $errors) json_respond(['ok' => false, 'error' => implode(' ', $errors)]);
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
@@ -71,13 +81,22 @@ $activeAdminNav = 'movies';
 require __DIR__ . '/includes/admin_header.php';
 ?>
 
-<?php if (isset($_GET['added'])): ?><div class="alert alert-success">Movie uploaded.</div><?php endif; ?>
+<?php if (isset($_GET['added'])): ?>
+<div class="alert alert-success" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+  <strong>Movie uploaded.</strong>
+  <span style="display:flex;gap:8px;flex-wrap:wrap;">
+    <a class="btn btn-sm btn-accent" href="#upload">+ Upload another movie</a>
+    <a class="btn btn-sm" href="<?= base_url('admin/music.php#upload') ?>">+ Add music</a>
+    <a class="btn btn-sm" href="<?= base_url('admin/books.php#upload') ?>">+ Add book</a>
+  </span>
+</div>
+<?php endif; ?>
 <?php if (isset($_GET['deleted'])): $n = (int)$_GET['deleted']; ?>
   <div class="alert alert-success"><?= $n === 1 ? 'Movie deleted.' : "$n movies deleted." ?></div>
 <?php endif; ?>
 
 <div class="panel" id="upload">
-  <h2>Upload a movie</h2>
+  <h2>Upload movies</h2>
   <?php foreach ($errors as $e): ?><div class="alert alert-error"><?= h($e) ?></div><?php endforeach; ?>
   <form method="post" enctype="multipart/form-data" class="upload-form">
     <input type="hidden" name="action" value="add">
@@ -87,14 +106,16 @@ require __DIR__ . '/includes/admin_header.php';
       <div class="field"><label>Year</label><input type="number" name="year" value="<?= h($_POST['year'] ?? '') ?>"></div>
       <div class="field"><label>Duration (minutes)</label><input type="number" name="duration" value="<?= h($_POST['duration'] ?? '') ?>"></div>
       <div class="field field-full"><label>Description</label><textarea name="description"><?= h($_POST['description'] ?? '') ?></textarea></div>
-      <div class="field"><label>Thumbnail image</label><input type="file" name="thumbnail" accept="image/*" required></div>
-      <div class="field"><label>Video file (mp4/webm, optional, up to 2GB)</label><input type="file" name="video" accept="video/mp4,video/webm"></div>
+      <div class="field"><label>Thumbnail image (optional)</label><input type="file" name="thumbnail" accept="image/*"></div>
+      <div class="field"><label>Video files — select several to queue (mp4/webm, up to 2GB each, optional)</label><input type="file" name="video" accept="video/mp4,video/webm" multiple data-queue-field="video"></div>
       <div class="field field-full"><label><input type="checkbox" name="featured" style="width:auto;"> Feature on homepage hero</label></div>
     </div>
     <div class="upload-progress" hidden>
       <div class="upload-progress-track"><div class="upload-progress-bar"></div></div>
       <span class="upload-progress-text">Uploading… 0%</span>
     </div>
+    <div class="batch-queue" id="batchQueue" hidden></div>
+    <div class="batch-summary" id="batchSummary"></div>
     <button class="btn btn-accent" type="submit">Upload Movie</button>
   </form>
 </div>

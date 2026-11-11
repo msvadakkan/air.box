@@ -30,22 +30,189 @@
     });
   }
 
-  // ---- Admin upload forms: real progress bar via XHR ----
+  // ---- Admin upload forms: progress, and several files queue ----
   // A plain <form method=post> gives the browser no way to show upload
-  // progress, so this intercepts submit, sends the same multipart body via
-  // XHR (which exposes upload.onprogress), and once the response lands
-  // (whether that's the success redirect PHP sends or a validation-error
-  // page re-rendered at the same URL) swaps it in as if it were a normal
-  // navigation.
+  // progress, so this intercepts submit and sends the same multipart body
+  // via XHR (which exposes upload.onprogress) and swaps in the response.
+  // When several files are picked in the normal upload form they are shown
+  // as a queue and uploaded one at a time, so one failure doesn't lose the
+  // rest.
   document.querySelectorAll('form.upload-form').forEach(function (form) {
     var progress = form.querySelector('.upload-progress');
     var bar = form.querySelector('.upload-progress-bar');
     var text = form.querySelector('.upload-progress-text');
     var submitBtn = form.querySelector('button[type=submit]');
+    var input = form.querySelector('input[data-queue-field]');
+    var queueEl = form.querySelector('.batch-queue');
+    var summaryEl = form.querySelector('.batch-summary');
+    var titleInput = form.querySelector('input[name="title"]');
     if (!progress || !bar || !text) return;
+
+    var rows = [];
+    var running = false;
+    var fieldName = input ? input.getAttribute('data-queue-field') : '';
+
+    function humanSize(bytes) {
+      var units = ['B', 'KB', 'MB', 'GB'];
+      var i = 0;
+      while (bytes >= 1024 && i < units.length - 1) { bytes /= 1024; i++; }
+      return (i === 0 ? bytes : bytes.toFixed(1)) + ' ' + units[i];
+    }
+
+    function titleFromFile(name) {
+      return name.replace(/\.[^.]+$/, '').replace(/[._]+/g, ' ').replace(/\s+/g, ' ').trim();
+    }
+
+    function resetQueue() {
+      queueEl.innerHTML = '';
+      queueEl.hidden = true;
+      rows = [];
+      summaryEl.textContent = '';
+    }
+
+    function addRow(file) {
+      var row = document.createElement('div');
+      row.className = 'batch-row';
+      row.innerHTML =
+        '<div class="batch-row-head">' +
+          '<input class="batch-title" type="text" aria-label="Title">' +
+          '<span class="batch-size"></span>' +
+        '</div>' +
+        '<div class="batch-track"><div class="batch-bar"></div></div>' +
+        '<div class="batch-status">Queued</div>';
+      var title = row.querySelector('.batch-title');
+      title.value = titleFromFile(file.name);
+      row.querySelector('.batch-size').textContent = humanSize(file.size);
+      queueEl.appendChild(row);
+      rows.push({
+        file: file,
+        row: row,
+        title: title,
+        bar: row.querySelector('.batch-bar'),
+        status: row.querySelector('.batch-status'),
+        done: false
+      });
+    }
+
+    if (input && queueEl && summaryEl) {
+      input.addEventListener('change', function () {
+        resetQueue();
+        var count = input.files.length;
+        if (titleInput) titleInput.required = count <= 1;
+        if (count < 2) return;
+        Array.prototype.forEach.call(input.files, addRow);
+        queueEl.hidden = false;
+        summaryEl.textContent = count + ' files queued — they upload one at a time.';
+      });
+    }
+
+    // The other fields (genre, artist, description, ...) apply to every file
+    // in the queue. File inputs (poster/cover) are left out: one poster can't
+    // stand for several uploads.
+    function sharedFields() {
+      var pairs = [];
+      Array.prototype.forEach.call(form.elements, function (el) {
+        if (!el.name || el.type === 'file' || el.type === 'submit' || el.type === 'button' || el.type === 'reset') return;
+        if (el.name === 'title' || el.name === 'action' || el.name === 'ajax') return;
+        if ((el.type === 'checkbox' || el.type === 'radio') && !el.checked) return;
+        pairs.push([el.name, el.value]);
+      });
+      return pairs;
+    }
+
+    function send(row) {
+      return new Promise(function (resolve) {
+        var body = new FormData();
+        body.append('action', 'add');
+        body.append('ajax', '1');
+        body.append('title', row.title.value.trim() || titleFromFile(row.file.name));
+        sharedFields().forEach(function (pair) { body.append(pair[0], pair[1]); });
+        body.append(fieldName, row.file, row.file.name);
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', window.location.pathname, true);
+        xhr.upload.addEventListener('progress', function (e) {
+          if (!e.lengthComputable) return;
+          var pct = Math.round(e.loaded / e.total * 100);
+          row.bar.style.width = pct + '%';
+          row.status.textContent = pct < 100 ? 'Uploading… ' + pct + '%' : 'Finishing…';
+        });
+        xhr.addEventListener('load', function () {
+          var res = null;
+          try { res = JSON.parse(xhr.responseText); } catch (err) { res = null; }
+          if (res && res.ok) {
+            row.bar.style.width = '100%';
+            row.row.classList.add('done');
+            row.status.textContent = 'Uploaded';
+            row.done = true;
+          } else {
+            row.row.classList.add('failed');
+            if (res && res.error) {
+              row.status.textContent = res.error;
+            } else if (xhr.responseURL && xhr.responseURL.indexOf('login.php') !== -1) {
+              row.status.textContent = 'Session expired — reload and sign in again.';
+            } else {
+              row.status.textContent = 'Server said HTTP ' + xhr.status + '.';
+            }
+          }
+          resolve();
+        });
+        xhr.addEventListener('error', function () {
+          row.row.classList.add('failed');
+          row.status.textContent = 'Network error — check the connection.';
+          resolve();
+        });
+        xhr.send(body);
+      });
+    }
+
+    function startQueue() {
+      if (running || !rows.length) return;
+      running = true;
+      progress.hidden = true;
+      if (submitBtn) submitBtn.disabled = true;
+      if (input) input.disabled = true;
+      rows.forEach(function (row) { row.title.disabled = true; });
+
+      var ok = 0;
+      var failed = 0;
+      var chain = Promise.resolve();
+      rows.forEach(function (row, i) {
+        chain = chain.then(function () {
+          summaryEl.textContent = 'Uploading ' + (i + 1) + ' of ' + rows.length + '…';
+          row.status.textContent = 'Starting…';
+          return send(row).then(function () {
+            if (row.done) ok++; else failed++;
+          });
+        });
+      });
+      chain.then(function () {
+        running = false;
+        if (input) input.disabled = false;
+        if (submitBtn) submitBtn.disabled = false;
+        summaryEl.textContent = 'Queue finished — ' + ok + ' uploaded' +
+          (failed ? ', ' + failed + ' failed' : '') + '.';
+        var refresh = document.createElement('button');
+        refresh.type = 'button';
+        refresh.className = 'btn btn-sm';
+        refresh.textContent = 'Refresh list';
+        refresh.addEventListener('click', function () { window.location.reload(); });
+        summaryEl.appendChild(document.createTextNode(' '));
+        summaryEl.appendChild(refresh);
+      });
+    }
 
     form.addEventListener('submit', function (e) {
       e.preventDefault();
+
+      if (input && input.files && input.files.length > 1) {
+        if (!rows.length) {
+          Array.prototype.forEach.call(input.files, addRow);
+          queueEl.hidden = false;
+        }
+        startQueue();
+        return;
+      }
 
       progress.hidden = false;
       progress.classList.remove('error');

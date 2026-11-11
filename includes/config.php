@@ -19,7 +19,7 @@ define('SITE_NAME', 'air.box');
 define('MAX_VIDEO_BYTES', 2000 * 1024 * 1024); // ~2GB (stays inside 32-bit int)
 define('MAX_AUDIO_BYTES', 50 * 1024 * 1024);  // 50MB
 define('MAX_PDF_BYTES', 50 * 1024 * 1024);    // 50MB
-define('MAX_IMAGE_BYTES', 8 * 1024 * 1024);   // 8MB
+define('MAX_IMAGE_BYTES', 20 * 1024 * 1024);  // 20MB (phone photos)
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
